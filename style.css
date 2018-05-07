@@ -6,17 +6,24 @@
 
 
 
-
+html, body {
+  max-width: 100%;
+  margin:0;
+  padding:0;
+  background-color: #FAFAFA;
+}
 .project_header {
   /* The image used */
   background-image: url("title_phone_background.jpg");
   /* Set a specific height */
-  height: 40%;
+  height: 80vh;
   /* Create the parallax scrolling effect */
+  width: 100%;
   background-attachment: fixed;
-  background-position: top;
+  background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
+  align-content: center;
 }
 .project_header .title {
   text-align: center;
@@ -25,5 +32,60 @@
   font-family: europe_light;
   font-size: 5em;
   letter-spacing: 0.05em;
-  color: white;
+  color: #CCCCCC;
+  padding-top: 20%;
+}
+
+.site_body {
+  align-content: center;
+  width:100%;
+  padding: 0;
+  height:100vh;
+  background-color: #FAFAFA;
+}
+.site_body .title {
+  padding-top: 20%;
+  text-align: center;
+  font-size: 3em;
+  font-family: europe_light;
+  letter-spacing: 0.05em;
+}
+.site_body .text{
+  text-align: justify;
+  font-size: 1em;
+  font-family: sans-serif;
+}
+.site_body .textbox{
+  height: auto;
+  width: 30%;
+  align-self: center;
+  align-items:center;
+  padding=top:5%;
+  padding-left: 35%;
+}
+.display_box {
+  display: flex;
+  height: inherit;
+}
+.display_image {
+  flex: 70%;
+  align-content:flex-end;
+}
+.display_text{
+  flex:30%;
+  align-content: flex-start;
+}
+
+.bottom_bar{
+  height: 5vh;
+  width: 100%;
+  background-color: #F0F0F0;
+}
+.bottom_bar .text{
+  text-align: right;
+  line-height: 5vh;
+  vertical-align: middle;
+  font-family: sans-serif;
+  color: #CCCCCC;
+  padding-left: 3vh;
 }
