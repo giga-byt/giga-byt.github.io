@@ -1,0 +1,29 @@
+/* Fonts */
+@font-face {
+  font-family: europe_light;
+  src: url(EuropeUnderground_light.ttf);
+}
+
+
+
+
+.project_header {
+  /* The image used */
+  background-image: url("title_phone_background.jpg");
+  /* Set a specific height */
+  height: 20%;
+  /* Create the parallax scrolling effect */
+  background-attachment: fixed;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+.project_header .title {
+  text-align: center;
+  align-items: center;
+  align-content: center;
+  font-family: europe_light;
+  font-size: 5em;
+  letter-spacing: 0.05em;
+  color: white;
+}
