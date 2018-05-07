@@ -1,7 +1,7 @@
 /* Fonts */
 @font-face {
-  font-family: europe_light;
-  src: url(EuropeUnderground_light.ttf);
+  font-family: title_font;
+  src: url(Quotus-Thin.ttf);
 }
 
 
@@ -14,7 +14,10 @@ html, body {
 }
 .project_header {
   /* The image used */
-  background-image: url("title_phone_background.jpg");
+  background-image: linear-gradient(
+      rgba(0, 0, 0, 0.3),
+      rgba(0, 0, 0, 0.3)
+    ),url("title_phone_background.jpg");
   /* Set a specific height */
   height: 80vh;
   /* Create the parallax scrolling effect */
@@ -29,10 +32,10 @@ html, body {
   text-align: center;
   align-items: center;
   align-content: center;
-  font-family: europe_light;
+  font-family: title_font;
   font-size: 5em;
   letter-spacing: 0.05em;
-  color: #CCCCCC;
+  color: #EEEEEE;
   padding-top: 20%;
 }
 
@@ -47,7 +50,7 @@ html, body {
   padding-top: 20%;
   text-align: center;
   font-size: 3em;
-  font-family: europe_light;
+  font-family: title_font;
   letter-spacing: 0.05em;
 }
 .site_body .text{
