@@ -19,7 +19,7 @@ html, body {
       rgba(0, 0, 0, 0.3)
     ),url("title_phone_background.jpg");
   /* Set a specific height */
-  height: 80vh;
+  height: 50vh;
   /* Create the parallax scrolling effect */
   width: 100%;
   background-attachment: fixed;
@@ -36,7 +36,7 @@ html, body {
   font-size: 5em;
   letter-spacing: 0.05em;
   color: #EEEEEE;
-  padding-top: 20%;
+  padding-top: 15%;
 }
 
 .site_body {
