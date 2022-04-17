@@ -33,15 +33,31 @@ export default class FakeFileSystem {
   cwd: Directory;
   pathMap: Map<string, Directory>;
   constructor() {
-
+    this.pathMap = new Map<string, Directory>();
+    this.cwd = this.pathMap.get('~')!;
   }
 
-
   ls = (directory?: Directory | DFile): Array<string> => {
-    if(directory == undefined){
+    if (directory == null) {
       return this.cwd.listContents();
-  } else if(list === "function") {
-      return dir
+    }
+    else if (directory instanceof DFile) {
+      return [directory.name];
+    }
+    else {
+      return directory.listContents();
+    }
+  }
+
+  cd = (directory?: Directory | DFile) => {
+    if (directory == null) {
+      this.cwd = this.pathMap.get('~')!;
+    }
+    else if (directory instanceof DFile) {
+      throw TypeError(`cd: ${directory.name}: Not a directory`)
+    }
+    else {
+      this.cwd = directory;
     }
   }
 

@@ -1,12 +1,15 @@
 import React from 'react';
+import { TerminalContextProvider } from 'react-terminal';
 import './App.css';
 import FullPage from './Home';
 
 function App() {
   return (
-    <div className="App">
-      <FullPage/>
-    </div>
+    <TerminalContextProvider>
+      <div className="App">
+        <FullPage/>
+      </div>
+    </TerminalContextProvider>
   );
 }
 
