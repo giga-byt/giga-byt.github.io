@@ -4,6 +4,7 @@ import { ReactTerminal } from "react-terminal";
 import { helpFunc } from "./TerminalFunctions"
 
 import "./TerminalApp.css"
+import FakeFileSystem from "./FakeFileSystem";
 
 interface IProps {}
 
@@ -13,12 +14,14 @@ interface IState {
 
 export default class TerminalApp extends React.Component<IProps, IState> {
   commands;
+  fs;
 
   constructor() {
     super({});
+    this.fs = new FakeFileSystem()
     this.commands = {
       help: helpFunc,
-      test: (d: string) => <div style={{backgroundColor: 'red'}}><p>hello</p> <p>goodbye</p></div>
+      ls: this.fs.ls
     }
     this.state = {
       cwd: "~"
