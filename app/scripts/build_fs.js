@@ -25,6 +25,6 @@ function getFs(directoryPath) {
 }
 
 var fsLayout = getFs(initDirectoryPath)
-fs.writeFile('src/data/fs.json', JSON.stringify(fsLayout), (error) => {
+fs.writeFile('src/data/FS_GENERATED.json', JSON.stringify(fsLayout), (error) => {
     if (error) throw error;
 });

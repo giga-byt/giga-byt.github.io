@@ -1,15 +1,19 @@
 import React from "react";
 import { ReactTerminal } from "react-terminal";
 
-import { helpFunc } from "./TerminalFunctions"
+import { helpFunc, ls } from "./TerminalFunctions"
 
 import "./TerminalApp.css"
-import FakeFileSystem from "./FakeFileSystem";
+import FakeFileSystem, { TerminalContext } from "./FakeFileSystem";
 
 interface IProps {}
 
 interface IState {
-  cwd: string
+  context: TerminalContext;
+}
+
+interface CallableWithContext {
+  (context: TerminalContext, args?: Array<string>): Array<string>;
 }
 
 export default class TerminalApp extends React.Component<IProps, IState> {
@@ -19,17 +23,25 @@ export default class TerminalApp extends React.Component<IProps, IState> {
   constructor() {
     super({});
     this.fs = new FakeFileSystem()
+    let callWithContextAndFormat = (callback: CallableWithContext) => {
+      return (argstr: string) => {
+        // preprocess args
+        let args = argstr.split(' ');
+        let ret = callback(this.state.context, args);
+        return <div>{ret}</div>
+      }
+    }
     this.commands = {
-      help: helpFunc,
-      ls: this.fs.ls
+      help: callWithContextAndFormat(helpFunc),
+      ls: callWithContextAndFormat(ls),
     }
     this.state = {
-      cwd: "~"
+      context: new TerminalContext(this.fs.pathMap.get('~')!, this.fs)
     }
   }
 
   getPrompt = () => {
-    return "user@my_pc:" + this.state.cwd
+    return "user@my_pc:" + this.state.context.cwd.name
   }
 
   render() {

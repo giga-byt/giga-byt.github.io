@@ -1,11 +1,31 @@
 import { helpText } from "./Man";
+import { DFile, Directory, TerminalContext } from "./FakeFileSystem";
 
-export function helpFunc(arg?: string): JSX.Element {
-  console.log(arg)
-  if (arg == "") {
-    return helpText;
+export function helpFunc(context: TerminalContext, args?: Array<string>): Array<string> {
+  return [];
+}
+
+export function ls(context: TerminalContext, args?: Array<string>): Array<string> {
+  function listContents(dir: Directory): Array<string> {
+    let keys = dir.children()
+    keys.reverse()
+    keys.push('..');
+    keys.push('.');
+    keys.reverse();
+    return [keys.join(' ')];
   }
-  else {
-    return <p>""</p>;
+  if(!args) {
+    return listContents(context.cwd);
   }
+  let argPath = args[0];
+  console.log(argPath)
+  let [resolvedPath, errorCode] = context.fs.resolvePath(argPath, context.cwd);
+  if(!resolvedPath){
+    return [""];
+    // log error code
+  }
+  if(resolvedPath instanceof DFile) {
+    return [""];
+  }
+  return listContents(resolvedPath);
 }

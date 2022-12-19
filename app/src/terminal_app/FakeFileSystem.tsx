@@ -1,19 +1,19 @@
 import { stringify } from "querystring";
 import React from "react";
 
-import FsBase from '../data/fs.json'
+import FsBase from '../data/FS_GENERATED.json'
 import './TextFormatting.css'
-class DFile {
+export class DFile {
   name: string;
-  content: JSX.Element;
+  content: string;
 
-  constructor(name: string, content: JSX.Element){
+  constructor(name: string, content: string){
     this.name = name;
     this.content = content;
   }
 }
 
-class Directory {
+export class Directory {
   name: string;
   parent: Nullable<Directory>;
   contents: Map<string, Directory | DFile>;
@@ -24,38 +24,38 @@ class Directory {
     this.contents = contents;
   }
 
-  listContents = (): string => {
-    let keys = Array.from(this.contents.keys());
-    keys.reverse()
-    keys.push('..');
-    keys.push('.');
-    keys.reverse();
-    console.log(keys.join(' '))
-    return keys.join(' ');
+  public children(): Array<string> {
+    return Array.from(this.contents.keys());
+  }
+}
+
+export class TerminalContext {
+  cwd: Directory;
+  fs: FakeFileSystem;
+
+  constructor(dir: Directory, fs: FakeFileSystem){
+    this.cwd = dir;
+    this.fs = fs;
   }
 }
 
 export default class FakeFileSystem {
-  cwd: Directory;
   pathMap: Map<string, Directory>;
+  rootDir: Directory;
+
   constructor() {
-    let rootDir = new Directory('/', null, new Map())
-    let homeDir = this.populateFs(FsBase, 'home', rootDir)
-    rootDir.contents.set('home', homeDir)
+    this.rootDir = new Directory('/', null, new Map())
+    let homeDir = this.populateFs(FsBase, 'home', this.rootDir)
+    this.rootDir.contents.set('home', homeDir)
     this.pathMap = new Map<string, Directory>();
     this.pathMap.set('~', homeDir)
-    this.cwd = this.pathMap.get('~')!;
-  }
-
-  parseComponent = (fsContent: string): JSX.Element => {
-    return <div>hello</div>
   }
 
   populateFs = (fsObj: Object, name: string, parentDir: Directory): Directory => {
     let newDir = new Directory(name, parentDir, new Map())
     Object.keys(fsObj).forEach(key => {
       if(typeof fsObj[key as keyof Object] == 'string'){
-        newDir.contents.set(key, new DFile(key, this.parseComponent(fsObj[key as keyof Object] as unknown as string)));
+        newDir.contents.set(key, new DFile(key, fsObj[key as keyof Object] as unknown as string));
       } else {
         newDir.contents.set(key, this.populateFs(fsObj[key as keyof Object], key, newDir))
       }
@@ -63,28 +63,37 @@ export default class FakeFileSystem {
     return newDir
   }
 
-  ls = (directory?: Directory | DFile): JSX.Element => {
-    if (!directory) {
-      return <span className="multiple-space-span">{this.cwd.listContents()}</span>;
+  resolvePath = (path: string, ocwd?: Directory): [Directory | DFile | undefined, number] => {
+    if(!path) {
+      return [undefined, -1];
     }
-    else if (directory instanceof DFile) {
-      return <span className="multiple-space-span">{directory.name}</span>;
+    let cwd: Directory;
+    if(path.startsWith('/')) { // absolute search
+      cwd = this.rootDir;
+      path = path.slice(1, path.length);
+    } else if(ocwd == undefined){
+      return [undefined, -1];
+    } else {
+      cwd = ocwd;
     }
-    else {
-      return <span className="multiple-space-span">{directory.listContents()}</span>;
+    let fullPath = path.split("/").reverse();
+    while(fullPath.length != 0){
+      let child = fullPath.pop()
+      if(!child){
+        break;
+      }
+      let childObj = cwd.contents.get(child);
+      if(!childObj){
+        return [undefined, -1];
+      } else if(childObj instanceof DFile){
+        if(!fullPath){
+          return [childObj, 0];
+        }
+        return [undefined, 2];
+      } else {
+        cwd = childObj;
+      }
     }
+    return [cwd, 0];
   }
-
-  cd = (directory?: Directory | DFile) => {
-    if (directory == null) {
-      this.cwd = this.pathMap.get('~')!;
-    }
-    else if (directory instanceof DFile) {
-      throw TypeError(`cd: ${directory.name}: Not a directory`)
-    }
-    else {
-      this.cwd = directory;
-    }
-  }
-
 }
