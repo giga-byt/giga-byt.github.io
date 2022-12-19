@@ -5,6 +5,7 @@ import { helpFunc, ls } from "./TerminalFunctions"
 
 import "./TerminalApp.css"
 import FakeFileSystem, { TerminalContext } from "./FakeFileSystem";
+import { displayStringArray } from "./TerminalDisplayDriver";
 
 interface IProps {}
 
@@ -27,8 +28,10 @@ export default class TerminalApp extends React.Component<IProps, IState> {
       return (argstr: string) => {
         // preprocess args
         let args = argstr.split(' ');
+        // actually call program with args
         let ret = callback(this.state.context, args);
-        return <div>{ret}</div>
+        // postprocess return value (list of strings, each str is one line)
+        return displayStringArray(ret);
       }
     }
     this.commands = {
