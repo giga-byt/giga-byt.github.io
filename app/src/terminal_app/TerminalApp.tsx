@@ -1,10 +1,10 @@
 import React from "react";
 import { ReactTerminal } from "react-terminal";
 
-import { helpFunc, ls } from "./TerminalFunctions"
+import { ls } from "./terminal_commands/ls"
 
 import "./TerminalApp.css"
-import FakeFileSystem, { TerminalContext } from "./FakeFileSystem";
+import FakeFileSystem, { TerminalContext } from "./terminal_fs/FakeFileSystem";
 import { displayStringArray } from "./TerminalDisplayDriver";
 
 interface IProps {}

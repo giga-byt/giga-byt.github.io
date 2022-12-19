@@ -1,9 +1,4 @@
-import { helpText } from "./Man";
-import { DFile, Directory, TerminalContext } from "./FakeFileSystem";
-
-export function helpFunc(context: TerminalContext, args?: Array<string>): Array<string> {
-  return [];
-}
+import { DFile, Directory, TerminalContext } from "../terminal_fs/FakeFileSystem";
 
 export function ls(context: TerminalContext, args?: Array<string>): Array<string> {
   function listContents(dir: Directory): Array<string> {

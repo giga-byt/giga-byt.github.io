@@ -1,7 +1,7 @@
 import { stringify } from "querystring";
 import React from "react";
 
-import FsBase from '../data/FS_GENERATED.json'
+import FsBase from '../../data/FS_GENERATED.json'
 import './TextFormatting.css'
 export class DFile {
   name: string;
