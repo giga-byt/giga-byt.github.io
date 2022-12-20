@@ -95,6 +95,11 @@ export default class FakeFileSystem {
       return [undefined, -1];
     }
     let cwd: Directory;
+    let expectsDirectory = false;
+    if(path.endsWith('/')){
+      expectsDirectory = true;
+      path = path.slice(0, -1);
+    }
     if(path.startsWith('/')) { // absolute search
       cwd = this.rootDir;
       path = path.slice(1, path.length);
@@ -113,7 +118,7 @@ export default class FakeFileSystem {
       if(!childObj){
         return [undefined, 1];
       } else if(childObj instanceof DFile){
-        if(fullPath.length === 0){
+        if(fullPath.length === 0 && !expectsDirectory){
           return [childObj, 0];
         }
         return [undefined, 2];

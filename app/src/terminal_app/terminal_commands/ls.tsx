@@ -22,11 +22,11 @@ function listContents(dir: Directory, flags: Set<string>): Array<string> {
   }
   if(flags.has('l')){
     let ret: Array<string> = [];
-    ret.push('Owner\tLast Changed\tName');
+    ret.push('Owner\tLast Changed\t\tName');
     keys.forEach(key => {
       let obj = dir.getChild(key);
       if(obj) {
-        ret.push(`${obj.owner}\t${obj.lastChanged.toDateString()}\t${key}`)
+        ret.push(`${obj.owner}\t${obj.lastChanged.toLocaleString().replace(',', '')}\t${key}`)
       }
     });
     return ret;
