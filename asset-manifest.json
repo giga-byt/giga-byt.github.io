@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/giga-byt.github.io/static/css/main.58fbf32f.css",
+    "main.js": "/giga-byt.github.io/static/js/main.52834d97.js",
+    "static/js/787.c1112931.chunk.js": "/giga-byt.github.io/static/js/787.c1112931.chunk.js",
+    "index.html": "/giga-byt.github.io/index.html",
+    "main.58fbf32f.css.map": "/giga-byt.github.io/static/css/main.58fbf32f.css.map",
+    "main.52834d97.js.map": "/giga-byt.github.io/static/js/main.52834d97.js.map",
+    "787.c1112931.chunk.js.map": "/giga-byt.github.io/static/js/787.c1112931.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.58fbf32f.css",
+    "static/js/main.52834d97.js"
+  ]
+}
