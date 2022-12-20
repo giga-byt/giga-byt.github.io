@@ -2,10 +2,12 @@ import React from "react";
 import { ReactTerminal } from "react-terminal";
 
 import { ls } from "./terminal_commands/ls"
+import { help } from "./terminal_commands/help"
 
 import "./TerminalApp.css"
-import FakeFileSystem, { TerminalContext } from "./terminal_fs/FakeFileSystem";
+import FakeFileSystem, { Directory, TerminalContext } from "./terminal_fs/FakeFileSystem";
 import { displayStringArray } from "./TerminalDisplayDriver";
+import { cd } from "./terminal_commands/cd";
 
 interface IProps {}
 
@@ -35,12 +37,20 @@ export default class TerminalApp extends React.Component<IProps, IState> {
       }
     }
     this.commands = {
-      help: callWithContextAndFormat(helpFunc),
+      help: callWithContextAndFormat(help),
       ls: callWithContextAndFormat(ls),
+      cd: callWithContextAndFormat(cd),
     }
     this.state = {
-      context: new TerminalContext(this.fs.pathMap.get('~')!, this.fs)
+      context: new TerminalContext(this.fs.pathMap.get('~')!, this.fs, this.updateCwd)
     }
+  }
+
+  updateCwd = (dir: Directory) => {
+    let context = new TerminalContext(dir, this.fs, this.updateCwd);
+    this.setState({
+      context: context
+    });
   }
 
   getPrompt = () => {

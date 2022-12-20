@@ -1,8 +1,5 @@
-import { stringify } from "querystring";
-import React from "react";
-
 import FsBase from '../../data/FS_GENERATED.json'
-import './TextFormatting.css'
+
 export class DFile {
   name: string;
   content: string;
@@ -22,6 +19,8 @@ export class Directory {
     this.name = name;
     this.parent = parent;
     this.contents = contents;
+    this.contents.set('.', this);
+    this.contents.set('..', parent || this);
   }
 
   public children(): Array<string> {
@@ -29,13 +28,20 @@ export class Directory {
   }
 }
 
+
+interface UpdateContext {
+  (dir: Directory): void;
+}
+
 export class TerminalContext {
   cwd: Directory;
   fs: FakeFileSystem;
+  changeCwd: UpdateContext;
 
-  constructor(dir: Directory, fs: FakeFileSystem){
+  constructor(dir: Directory, fs: FakeFileSystem, changeCwd: UpdateContext){
     this.cwd = dir;
     this.fs = fs;
+    this.changeCwd = changeCwd;
   }
 }
 
@@ -54,7 +60,7 @@ export default class FakeFileSystem {
   populateFs = (fsObj: Object, name: string, parentDir: Directory): Directory => {
     let newDir = new Directory(name, parentDir, new Map())
     Object.keys(fsObj).forEach(key => {
-      if(typeof fsObj[key as keyof Object] == 'string'){
+      if(typeof fsObj[key as keyof Object] === 'string'){
         newDir.contents.set(key, new DFile(key, fsObj[key as keyof Object] as unknown as string));
       } else {
         newDir.contents.set(key, this.populateFs(fsObj[key as keyof Object], key, newDir))
@@ -71,22 +77,22 @@ export default class FakeFileSystem {
     if(path.startsWith('/')) { // absolute search
       cwd = this.rootDir;
       path = path.slice(1, path.length);
-    } else if(ocwd == undefined){
+    } else if(ocwd === undefined){
       return [undefined, -1];
     } else {
       cwd = ocwd;
     }
     let fullPath = path.split("/").reverse();
-    while(fullPath.length != 0){
+    while(fullPath.length !== 0){
       let child = fullPath.pop()
       if(!child){
         break;
       }
       let childObj = cwd.contents.get(child);
       if(!childObj){
-        return [undefined, -1];
+        return [undefined, 1];
       } else if(childObj instanceof DFile){
-        if(!fullPath){
+        if(fullPath.length === 0){
           return [childObj, 0];
         }
         return [undefined, 2];
