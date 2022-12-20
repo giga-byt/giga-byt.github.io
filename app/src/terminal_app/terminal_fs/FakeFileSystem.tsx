@@ -3,10 +3,14 @@ import FsBase from '../../data/FS_GENERATED.json'
 export class DFile {
   name: string;
   content: string;
+  lastChanged: Date;
+  owner: string;
 
   constructor(name: string, content: string){
     this.name = name;
     this.content = content;
+    this.lastChanged = new Date();
+    this.owner = "";
   }
 }
 
@@ -14,6 +18,8 @@ export class Directory {
   name: string;
   parent: Nullable<Directory>;
   contents: Map<string, Directory | DFile>;
+  lastChanged: Date;
+  owner: string;
 
   constructor(name: string, parent: Nullable<Directory>, contents: Map<string, Directory | DFile>){
     this.name = name;
@@ -21,10 +27,25 @@ export class Directory {
     this.contents = contents;
     this.contents.set('.', this);
     this.contents.set('..', parent || this);
+    this.lastChanged = new Date();
+    this.owner = "";
   }
 
   public children(): Array<string> {
     return Array.from(this.contents.keys());
+  }
+
+  public addChild(nchild: Directory | DFile): boolean {
+    let nname = nchild.name;
+    if(!(nname in this.children())) {
+      this.contents.set(nname, nchild);
+      return true;
+    }
+    return false;
+  }
+
+  public getChild(fname: string): DFile | Directory | undefined {
+    return this.contents.get(fname);
   }
 }
 
