@@ -1,5 +1,5 @@
 import React from "react";
-import TerminalApp from "./terminal_app/TerminalApp";
+import MyTerminal from "./terminal/MyTerminal";
 
 interface IProps {}
 
@@ -17,9 +17,7 @@ export default class FullPage extends React.Component<IProps, IState> {
 
   render() {
     return (
-      <div>
-        {this.state.terminalMode ? <TerminalApp/> : "goodbye"}
-      </div>
+      <MyTerminal/>
     );
   }
 }
