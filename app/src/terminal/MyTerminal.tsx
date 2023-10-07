@@ -6,6 +6,7 @@ import './MyTerminal.css'
 import { ITerminalApplication } from "./terminal_apps/ITerminalApplication";
 import Shell from "./terminal_apps/shell/shell";
 import { MyTerminalContext } from "./MyTerminalContext";
+import Help from "./terminal_apps/help/help";
 
 interface IProps {}
 
@@ -33,6 +34,7 @@ export default class MyTerminal extends React.Component<IProps, IState> {
     let terminal = this.xtermRef?.current?.terminal;
     if(terminal){
       this.apps.set('shell', new Shell(terminal, this.termContext, this.exec));
+      this.apps.set('help', new Help(terminal, this.termContext));
       this.fitAddon.fit();
       this.exec('shell');
     }
@@ -56,8 +58,11 @@ export default class MyTerminal extends React.Component<IProps, IState> {
       return;
     }
     let cargs = args.slice(1);
-    app.onExec(cargs);
-    this.current_app = cmd;
+    if(app.onExec(cargs)){
+      this.current_app = cmd;
+    } else {
+      this.exec('shell');
+    }
   }
 
   componentWillUnmount(): void {

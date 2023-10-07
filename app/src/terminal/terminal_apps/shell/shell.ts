@@ -24,12 +24,13 @@ export default class Shell implements ITerminalApplication {
         this.terminal.writeln(`\r\n${this.context.user}@${this.context.machine} MINGW64 ${this.context.cwd.basename()}`);
     }
 
-    onExec(args: Array<string>) {
+    onExec(args: Array<string>): boolean {
         this.history = this.history.filter((item, index) => this.history.indexOf(item) === index);
         this.history.push('');
         this.currChar = 0;
         this.currLine = this.history.length - 1;
         this._write_tag();
+        return true;
     }
 
     currBuffer() {
