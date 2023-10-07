@@ -1,1 +1,1 @@
-export const MACHINE_NAME = "jupiter-597"
+export const MACHINE_NAME = "jupiter-599"
