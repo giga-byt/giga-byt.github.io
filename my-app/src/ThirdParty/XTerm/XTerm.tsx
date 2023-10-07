@@ -232,6 +232,6 @@ export default class Xterm extends React.Component<IProps> {
 	}
 
 	render() {
-		return <div className={this.props.className} ref={this.terminalRef} style={{textAlign:'left'}}/>
+		return <div className={this.props.className} ref={this.terminalRef} style={{height:'100%', textAlign:'left'}}/>
 	}
 }
