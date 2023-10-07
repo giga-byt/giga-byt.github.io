@@ -1,0 +1,1 @@
+export const MACHINE_NAME = "jupiter-597"
