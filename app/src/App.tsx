@@ -1,11 +1,11 @@
-import React from 'react';
 import './App.css';
-import FullPage from './Home';
+// import FullPage from './Home';
 
 function App() {
   return (
       <div className="App">
-        <FullPage/>
+        {/* <FullPage/> */}
+        Hello! This is my website.
       </div>
   );
 }
