@@ -45,7 +45,7 @@ class MyTerminal extends React.Component<IProps, IState> {
       this.apps.set('ls', new ListDir(terminal, this.termContext));
       this.apps.set('cd', new ChangeDirectory(terminal, this.termContext));
       this.apps.set('less', new Less(terminal, this.termContext, () => this.exec('clear && shell')));
-      this.apps.set('clear', new Clear(terminal, this.termContext))
+      this.apps.set('clear', new Clear(terminal, this.termContext));
 
       this.fitAddon.fit();
       this.exec('shell');
@@ -105,6 +105,7 @@ class MyTerminal extends React.Component<IProps, IState> {
       let app = this.apps.get(cmd);
       if(!app){
         returnToShell = true;
+        this._run_command(`shell: ${cmd}: command not found\n`);
         continue;
       }
       let cargs = args.slice(1);
