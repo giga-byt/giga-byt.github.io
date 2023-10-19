@@ -1,19 +1,26 @@
-import { Path } from "../terminal/MyTerminalContext";
-import { useAppDispatch, useAppSelector } from "./redux/hooks";
-  // The `state` arg is correctly typed as `RootState` already
-  const count = useAppSelector((state) => state.files)
-  const dispatch = useAppDispatch()
+import { Path, pathIsChild } from "../terminal/MyTerminalContext";
+import { store } from "./redux/store";
 export class MyFileSystem {
+    constructor() {}
 
-    constructor() {
+    _files(): Array<MyFile> {
+        return store.getState().files.files.map((ser) => new MyFile(ser));
+    }
+
+    children(path: Path): Array<Path> {
+        return this._files().filter((f) => pathIsChild(path, f.path())).map((f) => f.path());
     }
 
     exists(path: Path): boolean {
-        return false;
+        return this.get(path) != undefined;
     }
 
     get(path: Path): MyFile | undefined {
-        return undefined;
+        console.log(this._files().map((f) => f.path().toString()));
+        let found = this._files().filter((f) => Path.equals(path, f.path()));
+        if(found) {
+            return found[0];
+        }
     }
 
 
@@ -24,7 +31,7 @@ export class MyFileSystem {
 [
     path, (string, which doubles as identifier)
     isDirectory, (bool, indicates if this is a directory)
-    contents, (string; directories will have newline-separated children as contents)
+    contents, (string)
 ]
 */
 export type MFTuple = [string, boolean, string]

@@ -21,7 +21,7 @@ export default class Shell implements ITerminalApplication {
     }
 
     _write_tag() {
-        this.terminal.writeln(`\r\n${this.context.user}@${this.context.machine} MINGW64 ${this.context.cwd.basename()}`);
+        this.terminal.write(`\r\n${this.context.user}@${this.context.machine} MINGW64 ${this.context.cwd.basename()}\r\n$ `);
     }
 
     onExec(args: Array<string>): boolean {
@@ -42,10 +42,8 @@ export default class Shell implements ITerminalApplication {
     }
 
     writeBuffer() {
-        let cmd = `\x1b[2K\r${this.currBuffer()}\r`;
-        if(this.currChar > 0){
-            cmd += `\x1b[${this.currChar}C`;
-        }
+        let cmd = `\x1b[2K\r$ ${this.currBuffer()}\r`;
+        cmd += `\x1b[${this.currChar + 2}C`;
         this.terminal.write(cmd);
     }
 
@@ -90,7 +88,6 @@ export default class Shell implements ITerminalApplication {
             let cline = remove(this.currBuffer(), this.currChar - 1);
             this.setCurrBuffer(cline);
             this._moveCursorLeft();
-            // move left, enter space, move left
             this.writeBuffer();
             return;
         }

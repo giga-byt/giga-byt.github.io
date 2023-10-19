@@ -1,6 +1,18 @@
-import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux'
-import type { RootState, AppDispatch } from './store'
+import { connect, ConnectedProps } from 'react-redux'
+import { addFile, deleteFile, editFile, increment, increment_by } from './fileslice';
+import type { RootState } from './store'
 
-// Use throughout your app instead of plain `useDispatch` and `useSelector`
-export const useAppDispatch: () => AppDispatch = useDispatch
-export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector
+const mapState = (state: RootState) => ({
+    files: state.files
+});
+
+const mapDispatch = {
+    addFile,
+    deleteFile,
+    editFile,
+    increment,
+    increment_by
+};
+
+export const connector = connect(mapState, mapDispatch);
+export type PropsFromRedux = ConnectedProps<typeof connector>;

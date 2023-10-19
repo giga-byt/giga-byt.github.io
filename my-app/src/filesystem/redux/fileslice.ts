@@ -4,12 +4,19 @@ import { Path } from '../../terminal/MyTerminalContext'
 
 // Define a type for the slice state
 interface FSState {
-    files: Array<MFTuple>
+    files: Array<MFTuple>,
+    count: number
 }
 
 // Define the initial state using that type
 const initialState: FSState = {
-    files: [],
+    files: [
+        ['/', true, ''],
+        ['/README.md', false, 'This is a readme.'],
+        ['/bin', true, ''],
+        ['/bin/exec', false, '101010101110101010101'],
+    ],
+    count: 0
 }
 
 export const fileSlice = createSlice({
@@ -32,11 +39,17 @@ export const fileSlice = createSlice({
         }
         file.setContents(action.payload[1]);
         state.files.push(file.serialize());
+    },
+    increment: (state) => {
+        state.count++;
+    },
+    increment_by: (state, action: PayloadAction<number>) => {
+        state.count = state.count + action.payload;
     }
   },
 })
 
 // Action creators are generated for each case reducer function
-export const { addFile, deleteFile, editFile } = fileSlice.actions;
+export const { addFile, deleteFile, editFile, increment, increment_by } = fileSlice.actions;
 
 export default fileSlice.reducer;

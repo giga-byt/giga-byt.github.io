@@ -1,27 +1,27 @@
 import React from "react";
 import { XTermWrapper } from '../ThirdParty/XTerm'
 import { FitAddon } from 'xterm-addon-fit';
-import {  } from "xterm";
 import './MyTerminal.css'
 import { ITerminalApplication } from "./terminal_apps/ITerminalApplication";
 import Shell from "./terminal_apps/shell";
 import { MyTerminalContext } from "./MyTerminalContext";
 import Help from "./terminal_apps/help";
+import { connector, PropsFromRedux } from "../filesystem/redux/hooks";
+import ListDir from "./terminal_apps/ls";
+import ChangeDirectory from "./terminal_apps/cd";
 
-interface IProps {}
+interface IProps extends PropsFromRedux {}
+interface IState {}
 
-interface IState {
-}
-
-export default class MyTerminal extends React.Component<IProps, IState> {
+class MyTerminal extends React.Component<IProps, IState> {
   fitAddon: FitAddon;
   xtermRef: React.RefObject<XTermWrapper>;
   apps: Map<string, ITerminalApplication>;
   termContext: MyTerminalContext;
   current_app: string;
 
-  constructor() {
-    super({});
+  constructor(props: IProps) {
+    super(props);
     this.xtermRef = React.createRef();
     this.fitAddon = new FitAddon();
     this.apps = new Map<string, ITerminalApplication>();
@@ -35,6 +35,8 @@ export default class MyTerminal extends React.Component<IProps, IState> {
     if(terminal){
       this.apps.set('shell', new Shell(terminal, this.termContext, this.exec));
       this.apps.set('help', new Help(terminal, this.termContext));
+      this.apps.set('ls', new ListDir(terminal, this.termContext));
+      this.apps.set('cd', new ChangeDirectory(terminal, this.termContext));
 
       this.fitAddon.fit();
       this.exec('shell');
@@ -91,7 +93,13 @@ export default class MyTerminal extends React.Component<IProps, IState> {
 
   render() {
     return (
-      <XTermWrapper className="xterm-wrapper" ref={this.xtermRef} addons={[this.fitAddon]} onKey={this.onKey} onData={this.onData}/>
+      <div>
+        <XTermWrapper //className="xterm-wrapper"
+          ref={this.xtermRef} addons={[this.fitAddon]} onKey={this.onKey} onData={this.onData}/>
+        {this.props.files.count}
+      </div>
     );
   }
 }
+
+export default connector(MyTerminal);
