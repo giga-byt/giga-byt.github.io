@@ -21,17 +21,18 @@ export default class ControlCodes {
     }
 
     static moveRight(moves: number): string {
-        if(moves < 1) {
-            return '';
-        }
-        return `\x1b[${moves}C`;
+        return moves < 1 ? '' : `\x1b[${moves}C`;
+    }
+
+    static moveLeft(moves: number): string {
+        return moves < 1 ? '' : `\x1b[${moves}D`;
     }
 
     static moveDown(moves: number) {
-        if(moves < 1) {
-            return '';
-        }
-        return `\x1b[${moves}B`;
+        return moves < 1 ? '' : `\x1b[${moves}B`;
     }
 
+    static moveUp(moves: number) {
+        return moves < 1 ? '' : `\x1b[${moves}A`;
+    }
 }

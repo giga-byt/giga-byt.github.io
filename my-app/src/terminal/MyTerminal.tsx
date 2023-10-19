@@ -110,8 +110,7 @@ class MyTerminal extends React.Component<IProps, IState> {
       let cargs = args.slice(1);
       let ret = app.onExec(cargs);
       if(ret != undefined){
-        this._run_command(ret);
-        this._run_command('\n');
+        this._run_command(ret + '\n');
         returnToShell = true;
       } else {
         this.current_app = cmd

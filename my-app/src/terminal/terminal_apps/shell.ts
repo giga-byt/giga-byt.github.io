@@ -5,6 +5,10 @@ import { ITerminalApplication } from "./ITerminalApplication";
 import CC from './ControlCodes';
 import { KC } from './KeyCodes'
 
+
+const SPECIAL_ARGS = {
+    'prev_cmd': CC.moveUp(1),
+}
 export default class Shell implements ITerminalApplication {
     terminal: Terminal;
     context: MyTerminalContext;
@@ -38,9 +42,14 @@ export default class Shell implements ITerminalApplication {
         this.currChar = 0;
         this.currLine = this.history.length - 1;
         if(args.length != 0){
-            this.setCurrBuffer(args.join(' '));
-            this.queueCb(this.currBuffer());
-            return;
+            if(args[0] == SPECIAL_ARGS.prev_cmd){
+                this._moveCursorUp();
+                this._write_tag();
+                return;
+            }
+            else {
+                // do something when passed args?
+            }
         }
         this._write_tag();
         return;
@@ -168,7 +177,7 @@ export default class Shell implements ITerminalApplication {
                 this.writeBuffer();
             } else {
                 this.terminal.write(CC.newLine());
-                this.execCb(`echo ${matches.join(' ')}`)
+                this.execCb(`echo ${matches.join(' ')} && shell ${SPECIAL_ARGS.prev_cmd}`)
             }
             return;
         }

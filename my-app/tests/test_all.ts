@@ -16,4 +16,5 @@ function run_all(){
     parse_tok_test()
 }
 
+// run using `npx ts-node --esm tests/test_script.ts `
 run_all()
