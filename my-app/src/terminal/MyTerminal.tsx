@@ -4,9 +4,9 @@ import { FitAddon } from 'xterm-addon-fit';
 import {  } from "xterm";
 import './MyTerminal.css'
 import { ITerminalApplication } from "./terminal_apps/ITerminalApplication";
-import Shell from "./terminal_apps/shell/shell";
+import Shell from "./terminal_apps/shell";
 import { MyTerminalContext } from "./MyTerminalContext";
-import Help from "./terminal_apps/help/help";
+import Help from "./terminal_apps/help";
 
 interface IProps {}
 
@@ -35,6 +35,7 @@ export default class MyTerminal extends React.Component<IProps, IState> {
     if(terminal){
       this.apps.set('shell', new Shell(terminal, this.termContext, this.exec));
       this.apps.set('help', new Help(terminal, this.termContext));
+
       this.fitAddon.fit();
       this.exec('shell');
     }

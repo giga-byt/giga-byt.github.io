@@ -1,7 +1,7 @@
 import { Terminal } from "xterm";
-import { insert, remove } from "../../../utils/str_utils";
-import { MyTerminalContext } from "../../MyTerminalContext";
-import { ITerminalApplication } from "../ITerminalApplication";
+import { insert, remove } from "../../utils/str_utils";
+import { MyTerminalContext } from "../MyTerminalContext";
+import { ITerminalApplication } from "./ITerminalApplication";
 
 export default class Shell implements ITerminalApplication {
     terminal: Terminal;

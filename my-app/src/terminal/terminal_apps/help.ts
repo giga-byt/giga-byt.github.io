@@ -1,6 +1,6 @@
 import { Terminal } from "xterm";
-import { MyTerminalContext } from "../../MyTerminalContext";
-import { ITerminalApplication } from "../ITerminalApplication";
+import { MyTerminalContext } from "../MyTerminalContext";
+import { ITerminalApplication } from "./ITerminalApplication";
 
 export default class Help implements ITerminalApplication {
     terminal: Terminal;
