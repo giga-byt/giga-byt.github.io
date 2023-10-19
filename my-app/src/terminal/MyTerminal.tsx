@@ -11,6 +11,8 @@ import ListDir from "./terminal_apps/ls";
 import ChangeDirectory from "./terminal_apps/cd";
 import Less from "./terminal_apps/less";
 import Clear from "./terminal_apps/clear";
+import Echo from "./terminal_apps/echo";
+import CC from './terminal_apps/ControlCodes'
 
 interface IProps extends PropsFromRedux {}
 interface IState {}
@@ -38,6 +40,7 @@ class MyTerminal extends React.Component<IProps, IState> {
     let terminal = this.xtermRef?.current?.terminal;
     if(terminal){
       this.apps.set('shell', new Shell(terminal, this.termContext, this.queue_command, this.exec));
+      this.apps.set('echo', new Echo(terminal, this.termContext));
       this.apps.set('help', new Help(terminal, this.termContext));
       this.apps.set('ls', new ListDir(terminal, this.termContext));
       this.apps.set('cd', new ChangeDirectory(terminal, this.termContext));
@@ -108,6 +111,7 @@ class MyTerminal extends React.Component<IProps, IState> {
       let ret = app.onExec(cargs);
       if(ret != undefined){
         this._run_command(ret);
+        this._run_command('\n');
         returnToShell = true;
       } else {
         this.current_app = cmd

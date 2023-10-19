@@ -38,6 +38,9 @@ export class Path {
     }
 
     to(toDir: string): Path {
+        if(toDir.startsWith('/')){
+            return new Path(toDir);
+        }
         return new Path(this.toString() + toDir);
     }
 
@@ -76,6 +79,10 @@ export class MyTerminalContext {
 
     home() {
         return new Path('/home/' + this.user);
+    }
+
+    cwdChildren(): Array<string> {
+        return this.fs.children(this.cwd).map((f) => f.basename());
     }
 }
 

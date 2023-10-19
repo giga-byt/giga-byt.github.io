@@ -12,17 +12,24 @@ export default class ListDir implements ITerminalApplication {
     }
 
     onExec(args: Array<string>): string | undefined {
-        let listDir = '.';
-        if(args.length > 1){
-            listDir = args[0];
+        let listDirs = ['.'];
+        if(args.length > 0){
+            listDirs = args;
         }
-        let resolvedPath = resolvePath(this.context, listDir);
-        if(this.context.fs.exists(resolvedPath) && this.context.fs.get(resolvedPath)?.isDirectory()){
-            let children = this.context.fs.children(resolvedPath);
-            let basenames = children.map((p) => p.basename());
-            return basenames.join('  ');
-        }
-        return '';
+        let basenames: Array<string> = [];
+        listDirs.forEach(listDir => {
+            let resolvedPath = resolvePath(this.context, listDir);
+            let file = this.context.fs.get(resolvedPath);
+            if(file) {
+                if(file.isDirectory()){
+                    let children = this.context.fs.children(resolvedPath);
+                    basenames = basenames.concat(children.map((p) => p.basename()));
+                } else {
+                    basenames.push(file.name());
+                }
+            }
+        });
+        return basenames.join('  ');
     }
 
     onData(data: string) {}

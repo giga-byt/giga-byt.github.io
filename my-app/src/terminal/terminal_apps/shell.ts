@@ -1,5 +1,5 @@
 import { Terminal } from "xterm";
-import { insert, remove } from "../../utils/str_utils";
+import { escapeRegExp, expandToken, insert, longestCommonPrefix, parseTokens, remove } from "../../utils/str_utils";
 import { MyTerminalContext } from "../MyTerminalContext";
 import { ITerminalApplication } from "./ITerminalApplication";
 import CC from './ControlCodes';
@@ -84,6 +84,19 @@ export default class Shell implements ITerminalApplication {
         this.currChar = Math.min(this.currBuffer().length, this.currChar + 1);
     }
 
+    _expand_buffer(buf: string): string {
+        let asTokens = parseTokens(buf);
+        let expanded: Array<string> = [];
+        for(let tok of asTokens){
+            if(tok.includes('*')){
+                expanded = expanded.concat(expandToken(tok, this.context.cwdChildren()));
+            } else {
+                expanded.push(tok);
+            }
+        }
+        return expanded.join(' ');
+    }
+
     onKey (keyEvent: { key: string, domEvent: KeyboardEvent }) {
         let key = keyEvent.key;
         let ctrl = keyEvent.domEvent.ctrlKey;
@@ -95,7 +108,7 @@ export default class Shell implements ITerminalApplication {
         // enter
         if(key == '\r' || key == '\n'){
             this.terminal.write(CC.newLine());
-            this.execCb(this.currBuffer());
+            this.execCb(this._expand_buffer(this.currBuffer()));
             return;
         }
         // backspace
@@ -124,6 +137,39 @@ export default class Shell implements ITerminalApplication {
         if(key == KC.DOWN){ // down arrow
             this._moveCursorDown();
             this.writeBuffer();
+            return;
+        }
+        if(key == '\t') {
+            if(this.currChar != this.currBuffer().length){
+                return;
+            }
+            let asTokens = parseTokens(this.currBuffer());
+            if(!asTokens) {
+                return;
+            }
+            let lastTok = asTokens.pop()!;
+            let matches = expandToken(lastTok + '*', this.context.cwdChildren());
+            if(matches.length == 0) {
+                return;
+            }
+            if(matches.length == 1) {
+                asTokens.push(matches[0])
+                this.setCurrBuffer(asTokens.join(' '));
+                this.currChar = this.currBuffer().length;
+                this.writeBuffer();
+                return;
+            }
+            // multiple matches
+            let lcp = longestCommonPrefix(matches);
+            if(lastTok != lcp) {
+                asTokens.push(longestCommonPrefix(matches));
+                this.setCurrBuffer(asTokens.join(' '));
+                this.currChar = this.currBuffer().length;
+                this.writeBuffer();
+            } else {
+                this.terminal.write(CC.newLine());
+                this.execCb(`echo ${matches.join(' ')}`)
+            }
             return;
         }
         if(key.length == 1){
