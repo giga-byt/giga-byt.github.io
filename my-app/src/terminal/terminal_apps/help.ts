@@ -10,8 +10,8 @@ export default class Help implements ITerminalApplication {
         this.context = context;
     }
 
-    onExec(args: Array<string>) {
-        this.terminal.write(`
+    onExec(args: Array<string>): string | undefined {
+        return `
 GNU bash, version 4.4.23(1)-release (x86_64-pc-msys)\r
 These shell commands are defined internally.  Type 'help' to see this list.\r
 
@@ -19,8 +19,7 @@ A star (*) next to a name means that the command is disabled.\r
 Use '--help' after a command, e.g. 'ls --help', to see details on how to use the command.\r
 
     exit  return to graphical mode\r
-    ls    view directory information.\r\n`);
-        return false;
+    ls    view directory information.\r\n`;
     }
 
     onData(data: string){}

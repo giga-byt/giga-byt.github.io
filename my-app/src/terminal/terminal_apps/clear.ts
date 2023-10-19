@@ -1,8 +1,9 @@
 import { Terminal } from "xterm";
 import { MyTerminalContext, Path, resolvePath } from "../MyTerminalContext";
 import { ITerminalApplication } from "./ITerminalApplication";
+import CC from './ControlCodes'
 
-export default class ListDir implements ITerminalApplication {
+export default class Clear implements ITerminalApplication {
     terminal: Terminal;
     context: MyTerminalContext;
 
@@ -12,17 +13,9 @@ export default class ListDir implements ITerminalApplication {
     }
 
     onExec(args: Array<string>): string | undefined {
-        let listDir = '.';
-        if(args.length > 1){
-            listDir = args[0];
-        }
-        let resolvedPath = resolvePath(this.context, listDir);
-        if(this.context.fs.exists(resolvedPath) && this.context.fs.get(resolvedPath)?.isDirectory()){
-            let children = this.context.fs.children(resolvedPath);
-            let basenames = children.map((p) => p.basename());
-            return basenames.join('  ');
-        }
-        return '';
+        let cmd = CC.clearScreen();
+        cmd += CC.moveToTopLeft();
+        return cmd;
     }
 
     onData(data: string) {}

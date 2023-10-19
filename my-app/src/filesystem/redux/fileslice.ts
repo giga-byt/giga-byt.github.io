@@ -12,7 +12,7 @@ interface FSState {
 const initialState: FSState = {
     files: [
         ['/', true, ''],
-        ['/README.md', false, 'This is a readme.'],
+        ['/README.md', false, 'This is a readme.\nline 2\nl3\n4\n5\n6\n7'],
         ['/bin', true, ''],
         ['/bin/exec', false, '101010101110101010101'],
     ],

@@ -22,8 +22,6 @@ export class MyFileSystem {
             return found[0];
         }
     }
-
-
 }
 
 
@@ -51,6 +49,10 @@ export class MyFile {
 
     isDirectory(): boolean {
         return this._data[1];
+    }
+
+    contents(): string {
+        return this._data[2];
     }
 
     serialize(): MFTuple {

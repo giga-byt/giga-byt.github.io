@@ -9,6 +9,8 @@ import Help from "./terminal_apps/help";
 import { connector, PropsFromRedux } from "../filesystem/redux/hooks";
 import ListDir from "./terminal_apps/ls";
 import ChangeDirectory from "./terminal_apps/cd";
+import Less from "./terminal_apps/less";
+import Clear from "./terminal_apps/clear";
 
 interface IProps extends PropsFromRedux {}
 interface IState {}
@@ -19,6 +21,7 @@ class MyTerminal extends React.Component<IProps, IState> {
   apps: Map<string, ITerminalApplication>;
   termContext: MyTerminalContext;
   current_app: string;
+  exec_queue: Array<string>;
 
   constructor(props: IProps) {
     super(props);
@@ -27,16 +30,19 @@ class MyTerminal extends React.Component<IProps, IState> {
     this.apps = new Map<string, ITerminalApplication>();
     this.termContext = new MyTerminalContext();
     this.current_app = 'shell';
+    this.exec_queue = [];
   }
 
   componentDidMount(): void {
     window.addEventListener('resize', this.onResize);
     let terminal = this.xtermRef?.current?.terminal;
     if(terminal){
-      this.apps.set('shell', new Shell(terminal, this.termContext, this.exec));
+      this.apps.set('shell', new Shell(terminal, this.termContext, this.queue_command, this.exec));
       this.apps.set('help', new Help(terminal, this.termContext));
       this.apps.set('ls', new ListDir(terminal, this.termContext));
       this.apps.set('cd', new ChangeDirectory(terminal, this.termContext));
+      this.apps.set('less', new Less(terminal, this.termContext, () => this.exec('clear && shell')));
+      this.apps.set('clear', new Clear(terminal, this.termContext))
 
       this.fitAddon.fit();
       this.exec('shell');
@@ -47,23 +53,68 @@ class MyTerminal extends React.Component<IProps, IState> {
     this.xtermRef?.current?.terminal.write(c);
   }
 
+  queue_command = (command: string) => {
+    this.exec_queue.unshift(command);
+  }
+
   exec = (command: string) => {
-    console.log("execing", command)
-    let args = command.split(' ');
-    if(!args){
-      this.exec('shell');
-      return;
+    this.exec_queue.unshift(command);
+    this._resolve_queue();
+  }
+
+  // returns command+args, and the remainder of the command string
+  // which is unprocessed (as a result of | or &&)
+  process_command(command: string): [Array<string>, string] {
+    let args: Array<string> = [];
+    let remainder = '';
+    let as_words = command.split(' ');
+    let idx = 0;
+    while(idx < as_words.length) {
+      let curr = as_words[idx];
+      if(curr == '&&'){
+        remainder = as_words.slice(idx + 1).join(' ');
+        break;
+      }
+      args.push(curr);
+      idx += 1;
     }
-    let cmd = args[0];
-    let app = this.apps.get(cmd);
-    if(!app){
-      this.exec('shell');
-      return;
+    return [args, remainder];
+  }
+
+  _resolve_queue(): void {
+    let returnToShell = false;
+    while(this.exec_queue.length > 0) {
+      let command = this.exec_queue.shift();
+      if(!command) {
+        returnToShell = true;
+        continue;
+      }
+      // process
+      let [args, remainder] = this.process_command(command);
+      if(remainder){
+        this.exec_queue.unshift(remainder);
+      }
+      if(!args){
+        returnToShell = true;
+        continue;
+      }
+      let cmd = args[0];
+      let app = this.apps.get(cmd);
+      if(!app){
+        returnToShell = true;
+        continue;
+      }
+      let cargs = args.slice(1);
+      let ret = app.onExec(cargs);
+      if(ret != undefined){
+        this._run_command(ret);
+        returnToShell = true;
+      } else {
+        this.current_app = cmd
+        returnToShell = false;
+      }
     }
-    let cargs = args.slice(1);
-    if(app.onExec(cargs)){
-      this.current_app = cmd;
-    } else {
+    if(returnToShell){
       this.exec('shell');
     }
   }

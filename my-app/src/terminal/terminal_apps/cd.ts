@@ -11,7 +11,7 @@ export default class ChangeDirectory implements ITerminalApplication {
         this.context = context;
     }
 
-    onExec(args: Array<string>): boolean {
+    onExec(args: Array<string>): string | undefined {
         let navToDir = '~';
         if(args.length > 0){
             navToDir = args[0];
@@ -20,7 +20,7 @@ export default class ChangeDirectory implements ITerminalApplication {
         if(this.context.fs.exists(resolvedPath) && this.context.fs.get(resolvedPath)?.isDirectory()){
             this.context.cwd = resolvedPath;
         }
-        return false;
+        return '';
     }
 
     onData(data: string) {}

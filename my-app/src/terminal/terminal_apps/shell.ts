@@ -2,6 +2,8 @@ import { Terminal } from "xterm";
 import { insert, remove } from "../../utils/str_utils";
 import { MyTerminalContext } from "../MyTerminalContext";
 import { ITerminalApplication } from "./ITerminalApplication";
+import CC from './ControlCodes';
+import { KC } from './KeyCodes'
 
 export default class Shell implements ITerminalApplication {
     terminal: Terminal;
@@ -9,28 +11,39 @@ export default class Shell implements ITerminalApplication {
     history: Array<string>;
     currLine: number;
     currChar: number;
+    queueCb: (str: string) => void;
     execCb: (str: string) => void;
 
-    constructor(terminal: Terminal, context: MyTerminalContext, execCb: (str: string) => void) {
+    constructor(terminal: Terminal, context: MyTerminalContext, queueCb: (str: string) => void, execCb: (str: string) => void) {
         this.terminal = terminal;
         this.context = context;
         this.history = [''];
         this.currLine = 0;
         this.currChar = 0;
+        this.queueCb = queueCb;
         this.execCb = execCb;
     }
 
     _write_tag() {
-        this.terminal.write(`\r\n${this.context.user}@${this.context.machine} MINGW64 ${this.context.cwd.basename()}\r\n$ `);
+        let tag = CC.newLine();
+        tag += `${this.context.user}@${this.context.machine} MINGW64 ${this.context.cwd.basename()}`;
+        tag += CC.newLine();
+        this.terminal.write(tag);
+        this.writeBuffer()
     }
 
-    onExec(args: Array<string>): boolean {
+    onExec(args: Array<string>): string | undefined {
         this.history = this.history.filter((item, index) => this.history.indexOf(item) === index);
         this.history.push('');
         this.currChar = 0;
         this.currLine = this.history.length - 1;
+        if(args.length != 0){
+            this.setCurrBuffer(args.join(' '));
+            this.queueCb(this.currBuffer());
+            return;
+        }
         this._write_tag();
-        return true;
+        return;
     }
 
     currBuffer() {
@@ -42,8 +55,10 @@ export default class Shell implements ITerminalApplication {
     }
 
     writeBuffer() {
-        let cmd = `\x1b[2K\r$ ${this.currBuffer()}\r`;
-        cmd += `\x1b[${this.currChar + 2}C`;
+        let cmd = CC.clearLine() + CC.moveToLineStart();
+        cmd += `$ ${this.currBuffer()}`
+        cmd += CC.moveToLineStart();
+        cmd += CC.moveRight(this.currChar + 2);
         this.terminal.write(cmd);
     }
 
@@ -79,34 +94,34 @@ export default class Shell implements ITerminalApplication {
         }
         // enter
         if(key == '\r' || key == '\n'){
-            this.terminal.write('\r\n');
+            this.terminal.write(CC.newLine());
             this.execCb(this.currBuffer());
             return;
         }
         // backspace
-        if(key == '\u007f') {
+        if(key == KC.BACKSPACE) {
             let cline = remove(this.currBuffer(), this.currChar - 1);
             this.setCurrBuffer(cline);
             this._moveCursorLeft();
             this.writeBuffer();
             return;
         }
-        if(key == '\u001b[D'){ // left arrow
+        if(key == KC.LEFT){ // left arrow
             this._moveCursorLeft();
             this.writeBuffer();
             return;
         }
-        if(key == '\u001b[C'){ // right arrow
+        if(key == KC.RIGHT){ // right arrow
             this._moveCursorRight();
             this.writeBuffer();
             return;
         }
-        if(key == '\u001b[A'){ // up arrow
+        if(key == KC.UP){ // up arrow
             this._moveCursorUp();
             this.writeBuffer();
             return;
         }
-        if(key == '\u001b[B'){ // down arrow
+        if(key == KC.DOWN){ // down arrow
             this._moveCursorDown();
             this.writeBuffer();
             return;
