@@ -3,6 +3,7 @@ import { insert, remove } from "../../utils/str_utils";
 import { MyTerminalContext, resolvePath } from "../MyTerminalContext";
 import { ITerminalApplication } from "./ITerminalApplication";
 import CC from './ControlCodes'
+import { KC } from "./KeyCodes";
 
 export default class Less implements ITerminalApplication {
     terminal: Terminal;
@@ -75,6 +76,7 @@ export default class Less implements ITerminalApplication {
         }
         this.contents = file.contents();
         this.scroll = 0;
+        this.terminal.clear();
         this._writeDocument();
         return;
     }
@@ -91,13 +93,12 @@ export default class Less implements ITerminalApplication {
         if(ctrl || alt){
             return;
         }
-        // backspace
-        if(key == '\u001b[A'){ // up arrow
+        if(key == KC.UP){ // up arrow
             this._scrollUp();
             this._writeDocument();
             return;
         }
-        if(key == '\u001b[B'){ // down arrow
+        if(key == KC.DOWN){ // down arrow
             this._scrollDown();
             this._writeDocument();
             return;

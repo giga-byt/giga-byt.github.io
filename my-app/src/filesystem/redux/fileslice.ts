@@ -14,6 +14,9 @@ const initialState: FSState = {
         ['/', true, ''],
         ['/README.md', false, 'This is a readme.\nline 2\nl3\n4\n5\n6\n7'],
         ['/README2.md', false, 'This is a readme.\nline 2\nl3\n4\n5\n6\n7'],
+        ['/test.md', false, 'a\nb\nc\nd\nthis is a really really really really \
+                             really really really really really really really\
+                             really really really really really long line\ne\nf\ng\nh\ni\nj\nk\nl\nm\nn\no\np\nq\nr\ns\nt\nu\nv\nw\nx\ny\nz'],
         ['/bin', true, ''],
         ['/bin/exec', false, '101010101110101010101'],
     ],

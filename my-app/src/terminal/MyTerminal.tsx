@@ -12,7 +12,7 @@ import ChangeDirectory from "./terminal_apps/cd";
 import Less from "./terminal_apps/less";
 import Clear from "./terminal_apps/clear";
 import Echo from "./terminal_apps/echo";
-import CC from './terminal_apps/ControlCodes'
+import Edit from "./terminal_apps/edit";
 
 interface IProps extends PropsFromRedux {}
 interface IState {}
@@ -46,6 +46,7 @@ class MyTerminal extends React.Component<IProps, IState> {
       this.apps.set('cd', new ChangeDirectory(terminal, this.termContext));
       this.apps.set('less', new Less(terminal, this.termContext, () => this.exec('clear && shell')));
       this.apps.set('clear', new Clear(terminal, this.termContext));
+      this.apps.set('edit', new Edit(terminal, this.termContext, () => this.exec('clear && shell')));
 
       this.fitAddon.fit();
       this.exec('shell');

@@ -37,7 +37,7 @@ export default class Shell implements ITerminalApplication {
     }
 
     onExec(args: Array<string>): string | undefined {
-        this.history = this.history.filter((item, index) => this.history.indexOf(item) === index);
+        this.history = this.history.filter((item, index) => item != '');
         this.history.push('');
         this.currChar = 0;
         this.currLine = this.history.length - 1;

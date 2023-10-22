@@ -1,7 +1,6 @@
 import { Terminal } from "xterm";
 import { MyTerminalContext, Path, resolvePath } from "../MyTerminalContext";
 import { ITerminalApplication } from "./ITerminalApplication";
-import CC from './ControlCodes'
 
 export default class Clear implements ITerminalApplication {
     terminal: Terminal;
@@ -13,9 +12,8 @@ export default class Clear implements ITerminalApplication {
     }
 
     onExec(args: Array<string>): string | undefined {
-        let cmd = CC.clearScreen();
-        cmd += CC.moveToTopLeft();
-        return cmd;
+        this.terminal.clear();
+        return '';
     }
 
     onData(data: string) {}
