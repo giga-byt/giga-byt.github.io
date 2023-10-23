@@ -2,11 +2,21 @@ import { Terminal } from "xterm";
 import { insert, remove } from "../../utils/str_utils";
 import { MyTerminalContext, resolvePath } from "../MyTerminalContext";
 import { ITerminalApplication } from "./ITerminalApplication";
-import CC from './ControlCodes'
+import CC, { TBGColor, TColor } from './ControlCodes'
 import { KC } from "./KeyCodes";
+import { Cursor } from "./CursorUtils";
 
-const NCOMMANDROWS = 2;
+const NCOMMANDROWS = 3;
 const NCOMMANDCOLS = 1;
+
+enum EditMode {
+    EDIT = 0,
+    SAVE = 1
+}
+
+const FILE_PREFIX = 'File Name to Write: ';
+
+
 
 export default class Edit implements ITerminalApplication {
     terminal: Terminal;
@@ -14,6 +24,14 @@ export default class Edit implements ITerminalApplication {
     contents: Array<string>;
     scroll: [number, number];
     cpos: [number, number];
+    statusTimer: number;
+    statusBuffer: string;
+    mode: EditMode;
+
+    // variables used to control save mode
+    fname: string;
+    save_cursor_pos: number;
+
     exit: () => void;
 
     constructor(terminal: Terminal, context: MyTerminalContext, exitCb: () => void) {
@@ -22,6 +40,11 @@ export default class Edit implements ITerminalApplication {
         this.contents = [];
         this.scroll = [0, 0];
         this.cpos = [0, 0];
+        this.statusTimer = 0;
+        this.statusBuffer = '';
+        this.fname = '';
+        this.save_cursor_pos = 0;
+        this.mode = EditMode.EDIT;
         this.exit = exitCb;
     }
 
@@ -31,6 +54,10 @@ export default class Edit implements ITerminalApplication {
 
     _viewportCols() {
         return this.terminal.cols - NCOMMANDCOLS;
+    }
+
+    _statusRow(): number {
+        return this._viewportRows();
     }
 
     _cursorUp() {
@@ -132,12 +159,41 @@ export default class Edit implements ITerminalApplication {
         this.contents[this._cursorLine()] = s;
     }
 
-    _enterChar() {
-
+    _getStatusMessage(): string {
+        return this.statusTimer != 0 ? this.statusBuffer : '';
     }
 
+    _getDisplayCursorPos(): [number, number] {
+        if(this.mode == EditMode.EDIT) {
+            return this.cpos;
+        } else {
+            return [this.save_cursor_pos + FILE_PREFIX.length, this._statusRow()];
+        }
+    }
+
+    _writeStatusMessage(message: string, timer: number = 50) {
+        this.statusTimer = timer;
+        let statusMsg = '';
+        statusMsg += CC.moveRight(Math.round(this.terminal.cols / 2 - message.length / 2));
+        statusMsg += CC.color(message, TColor.BLACK, TBGColor.LIGHT_GRAY, true);
+        this.statusBuffer = statusMsg;
+    }
+
+    _writeFileDialog() {
+        // lasts forever
+        this.statusTimer = -1;
+        let msg = FILE_PREFIX;
+        msg += this.fname;
+        // fill rest with spaces
+        msg = msg.padEnd(this.terminal.cols);
+        msg = CC.color(msg, TColor.BLACK, TBGColor.LIGHT_GRAY, true);
+        this.statusBuffer = msg;
+    }
 
     _displayDocument() {
+        if(this.statusTimer != 0){
+            this.statusTimer -= 1;
+        }
         let cmd = CC.clearScreen();
         cmd += CC.moveToTopLeft();
         let nrows = this._viewportRows();
@@ -148,14 +204,23 @@ export default class Edit implements ITerminalApplication {
             cmd += lScrolledLine;
             cmd += CC.newLine();
         });
+        // write commands
         cmd += CC.moveToTopLeft();
-        console.log(this.cpos);
-        cmd += CC.moveRight(this.cpos[0]);
-        cmd += CC.moveDown(this.cpos[1]);
+        cmd += CC.moveDown(this._viewportRows());
+        let statusMsg = this._getStatusMessage();
+        cmd += statusMsg + CC.newLine();
+        cmd += CC.color('^O', TColor.BLACK, TBGColor.LIGHT_GRAY, true) + ' Write Out' + CC.newLine();
+        cmd += CC.color('^X', TColor.BLACK, TBGColor.LIGHT_GRAY, true) + ' Exit';
+
+        cmd += CC.moveToTopLeft();
+        let pos = this._getDisplayCursorPos();
+        cmd += CC.moveRight(pos[0]);
+        cmd += CC.moveDown(pos[1]);
         this.terminal.write(cmd);
     }
 
     onExec(args: Array<string>): string | undefined {
+        this.mode = EditMode.EDIT;
         if(args.length == 0){
             return 'no arg';
         }
@@ -168,10 +233,12 @@ export default class Edit implements ITerminalApplication {
         if(file.isDirectory()){
             return 'is dir';
         }
+        this.fname = file.name();
         this.contents = file.contents().split('\n');
         this.scroll = [0, 0];
         this.cpos = [0, 0];
         this.terminal.clear();
+        this._writeStatusMessage(`Read ${this.contents.length} lines.`)
         this._displayDocument();
         return;
     }
@@ -181,61 +248,107 @@ export default class Edit implements ITerminalApplication {
     }
 
     onKey (keyEvent: { key: string, domEvent: KeyboardEvent }) {
+        if(this.mode == EditMode.EDIT) {
+            this.onKeyEditMode(keyEvent);
+        } else {
+            this.onKeySaveMode(keyEvent);
+        }
+    }
+
+    onKeySaveMode (keyEvent: { key: string, domEvent: KeyboardEvent }) {
         let key = keyEvent.key;
         let ctrl = keyEvent.domEvent.ctrlKey;
         let alt = keyEvent.domEvent.altKey;
+        if(ctrl || alt) {
+            return;
+        }
+        switch(key) {
+            case '\r': // Fallthrough
+            case '\n':
+                this._writeStatusMessage(`[ Wrote ${this.contents.length} line${this.contents.length > 1 ? 's' : ''} ]`);
+                this.mode = EditMode.EDIT;
+                this._displayDocument();
+                return;
+            case KC.BACKSPACE:
+                this.fname = remove(this.fname, this.save_cursor_pos - 1);
+                this.save_cursor_pos = Cursor.Left(this.save_cursor_pos);
+                break;
+            case KC.LEFT:
+                this.save_cursor_pos = Cursor.Left(this.save_cursor_pos);
+                break;
+            case KC.RIGHT:
+                this.save_cursor_pos = Cursor.Right(this.save_cursor_pos, this.fname.length);
+                break;
+            default:
+                if(key.length == 1) {
+                    this.fname = insert(this.fname, this.save_cursor_pos, key);
+                    this.save_cursor_pos = Cursor.Right(this.save_cursor_pos, this.fname.length);
+                }
+        }
+        this._writeFileDialog();
+        this._displayDocument();
+    }
 
-        if(ctrl || alt){
+    onKeyEditMode (keyEvent: { key: string, domEvent: KeyboardEvent }) {
+        let key = keyEvent.key;
+        let ctrl = keyEvent.domEvent.ctrlKey;
+        let alt = keyEvent.domEvent.altKey;
+        if(alt) {
             return;
         }
-        // enter
-        if(key == '\r' || key == '\n'){
-            let cline = insert(this._currentLine(), this._cursorChar(), '\n');
-            let lines = cline.split('\n');
-            lines.reverse();
-            this.contents.splice(this._cursorLine(), 1);
-            for(let line of lines){
-                this.contents.splice(this._cursorLine(), 0, line);
+        if (ctrl) {
+            if(key == KC.CTRLX){
+                this.exit();
+                return;
+            } else if (key == KC.CTRLO){
+                this.mode = EditMode.SAVE;
+                this.save_cursor_pos = this.fname.length;
+                this._writeFileDialog();
+                this._displayDocument();
+                return;
             }
-            this._cursorDown();
-            this.scroll[0] = 0;
-            this.cpos[0] = 0;
-            this._displayDocument();
             return;
         }
-        if(key == KC.BACKSPACE) {
-            let cline = remove(this._currentLine(), this._cursorChar() - 1);
-            this._setCurrentLine(cline);
-            this._cursorLeft();
-            this._displayDocument();
-            return;
+
+        switch(key) {
+            case '\r': // Fallthrough
+            case '\n':
+                let cline = insert(this._currentLine(), this._cursorChar(), '\n');
+                let lines = cline.split('\n');
+                lines.reverse();
+                this.contents.splice(this._cursorLine(), 1);
+                for(let line of lines){
+                    this.contents.splice(this._cursorLine(), 0, line);
+                }
+                this._cursorDown();
+                this.scroll[0] = 0;
+                this.cpos[0] = 0;
+                break;
+            case KC.BACKSPACE:
+                this._setCurrentLine(remove(this._currentLine(), this._cursorChar() - 1));
+                this._cursorLeft();
+                break;
+            case KC.UP:
+                this._cursorUp();
+                break;
+            case KC.DOWN:
+                this._cursorDown();
+                break;
+            case KC.LEFT:
+                this._cursorLeft();
+                break;
+            case KC.RIGHT:
+                this._cursorRight();
+                break;
+            default:
+                if(key.length == 1){
+                    let cline = insert(this._currentLine(), this._cursorChar(), key);
+                    this._setCurrentLine(cline);
+                    this.cpos[0] += 1;
+                    this._displayDocument();
+                    return;
+                }
         }
-        if(key == KC.UP) {
-            this._cursorUp();
-            this._displayDocument();
-            return;
-        }
-        if(key == KC.DOWN) {
-            this._cursorDown();
-            this._displayDocument();
-            return;
-        }
-        if(key == KC.LEFT) {
-            this._cursorLeft();
-            this._displayDocument();
-            return;
-        }
-        if(key == KC.RIGHT) {
-            this._cursorRight();
-            this._displayDocument();
-            return;
-        }
-        if(key.length == 1){
-            let cline = insert(this._currentLine(), this._cursorChar(), key);
-            this._setCurrentLine(cline);
-            this.cpos[0] += 1;
-            this._displayDocument();
-            return;
-        }
+        this._displayDocument();
     }
 }

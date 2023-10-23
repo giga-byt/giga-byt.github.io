@@ -6,5 +6,8 @@ export namespace KC {
         UP = '\u001b[A',
         DOWN = '\u001b[B',
 
+        CTRLO = '\u000f',
+        CTRLX = '\u0018',
+
         NONE = '';
 }
