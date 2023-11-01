@@ -1,6 +1,6 @@
 import { Terminal } from "xterm";
 import { insert, remove } from "../../utils/str_utils";
-import { MyTerminalContext, resolvePath } from "../MyTerminalContext";
+import { MyTerminalContext, Path, resolvePath } from "../MyTerminalContext";
 import { ITerminalApplication } from "./ITerminalApplication";
 import CC, { TBGColor, TColor } from './ControlCodes'
 import { KC } from "./KeyCodes";
@@ -27,9 +27,9 @@ export default class Edit implements ITerminalApplication {
     statusTimer: number;
     statusBuffer: string;
     mode: EditMode;
+    fpath: Path;
 
     // variables used to control save mode
-    fname: string;
     save_cursor_pos: number;
 
     exit: () => void;
@@ -42,10 +42,18 @@ export default class Edit implements ITerminalApplication {
         this.cpos = [0, 0];
         this.statusTimer = 0;
         this.statusBuffer = '';
-        this.fname = '';
+        this.fpath = new Path('');
         this.save_cursor_pos = 0;
         this.mode = EditMode.EDIT;
         this.exit = exitCb;
+    }
+
+    _get_fname() {
+        return this.fpath.basename();
+    }
+
+    _set_fname(name: string) {
+        this.fpath = this.fpath.up().to(name);
     }
 
     _viewportRows() {
@@ -183,7 +191,7 @@ export default class Edit implements ITerminalApplication {
         // lasts forever
         this.statusTimer = -1;
         let msg = FILE_PREFIX;
-        msg += this.fname;
+        msg += this._get_fname();
         // fill rest with spaces
         msg = msg.padEnd(this.terminal.cols);
         msg = CC.color(msg, TColor.BLACK, TBGColor.LIGHT_GRAY, true);
@@ -199,7 +207,7 @@ export default class Edit implements ITerminalApplication {
 
         // write file header
         let header = '';
-        let fname = this.fname;
+        let fname = this._get_fname();
         header = header.padStart(Math.round(this.terminal.cols / 2 - fname.length / 2));
         header += fname;
         header = header.padEnd(this.terminal.cols);
@@ -214,6 +222,8 @@ export default class Edit implements ITerminalApplication {
             cmd += CC.newLine();
         });
         // // write commands
+        cmd += CC.moveToTopLeft();
+        cmd += CC.moveDown(TOP_ROWS + this._viewportRows());
         let statusMsg = this._getStatusMessage();
         cmd += statusMsg + CC.newLine();
         cmd += CC.color('^O', TColor.BLACK, TBGColor.LIGHT_GRAY, true) + ' Write Out' + CC.newLine();
@@ -223,12 +233,11 @@ export default class Edit implements ITerminalApplication {
         let pos = this._getDisplayCursorPos();
         cmd += CC.moveRight(pos[0]);
         cmd += CC.moveDown(pos[1]);
-        console.log(cmd);
         this.terminal.write(cmd);
     }
 
     _saveDocument(): void {
-
+        this.context.fs.write(this.fpath, this.contents.join('\n'));
     }
 
     onExec(args: Array<string>): string | undefined {
@@ -240,12 +249,13 @@ export default class Edit implements ITerminalApplication {
         let resolvedPath = resolvePath(this.context, fname);
         let file = this.context.fs.get(resolvedPath);
         if(!file){
-            return 'no file';
+            this.context.fs.write(resolvedPath, '');
+            file = this.context.fs.get(resolvedPath)!;
         }
-        if(file.isDirectory()){
+        else if(file.isDirectory()){
             return 'is dir';
         }
-        this.fname = file.name();
+        this.fpath = resolvedPath;
         this.contents = file.contents().split('\n');
         this.scroll = [0, 0];
         this.cpos = [0, 0];
@@ -279,22 +289,25 @@ export default class Edit implements ITerminalApplication {
             case '\n':
                 this._writeStatusMessage(`[ Wrote ${this.contents.length} line${this.contents.length > 1 ? 's' : ''} ]`);
                 this.mode = EditMode.EDIT;
+                this._saveDocument()
                 this._displayDocument();
                 return;
             case KC.BACKSPACE:
-                this.fname = remove(this.fname, this.save_cursor_pos - 1);
+                let fname = remove(this._get_fname(), this.save_cursor_pos - 1);
+                this._set_fname(fname);
                 this.save_cursor_pos = Cursor.Left(this.save_cursor_pos);
                 break;
             case KC.LEFT:
                 this.save_cursor_pos = Cursor.Left(this.save_cursor_pos);
                 break;
             case KC.RIGHT:
-                this.save_cursor_pos = Cursor.Right(this.save_cursor_pos, this.fname.length);
+                this.save_cursor_pos = Cursor.Right(this.save_cursor_pos, this._get_fname().length);
                 break;
             default:
                 if(key.length == 1) {
-                    this.fname = insert(this.fname, this.save_cursor_pos, key);
-                    this.save_cursor_pos = Cursor.Right(this.save_cursor_pos, this.fname.length);
+                    let fname = insert(this._get_fname(), this.save_cursor_pos, key);
+                    this._set_fname(fname);
+                    this.save_cursor_pos = Cursor.Right(this.save_cursor_pos, this._get_fname().length);
                 }
         }
         this._writeFileDialog();
@@ -314,7 +327,7 @@ export default class Edit implements ITerminalApplication {
                 return;
             } else if (key == KC.CTRLO){
                 this.mode = EditMode.SAVE;
-                this.save_cursor_pos = this.fname.length;
+                this.save_cursor_pos = this._get_fname().length;
                 this._writeFileDialog();
                 this._displayDocument();
                 return;

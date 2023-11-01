@@ -41,7 +41,8 @@ export class Path {
         if(toDir.startsWith('/')){
             return new Path(toDir);
         }
-        return new Path(this.toString() + toDir);
+        let cpath = this.toString() + '/';
+        return new Path(cpath + toDir);
     }
 
     static equals(p1: Path, p2: Path): boolean {

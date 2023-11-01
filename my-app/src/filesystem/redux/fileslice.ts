@@ -31,14 +31,14 @@ export const fileSlice = createSlice({
         state.files.push(action.payload.serialize());
     },
     deleteFile: (state, action: PayloadAction<Path>) => {
-        state.files = state.files.filter((data) => new MyFile(data).path() != action.payload);
+        state.files = state.files.filter((data) => Path.equals(new MyFile(data).path(), action.payload));
     },
     editFile: (state, action: PayloadAction<[Path, string]>) => {
-        let foundFile = state.files.filter((data) => new MyFile(data).path() == action.payload[0]);
+        let foundFile = state.files.filter((data) => Path.equals(new MyFile(data).path(), action.payload[0]));
         let file: MyFile = new MyFile([action.payload[0].toString(), false, '']);
         if(foundFile.length == 1){
             // file already exists, remove
-            state.files = state.files.filter((data) => new MyFile(data).path() != action.payload[0]);
+            state.files = state.files.filter((data) => !Path.equals(new MyFile(data).path(), action.payload[0]));
             file = new MyFile(foundFile[0]);
         }
         file.setContents(action.payload[1]);

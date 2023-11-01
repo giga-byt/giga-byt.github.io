@@ -1,4 +1,6 @@
 import { Path, pathIsChild } from "../terminal/MyTerminalContext";
+import { strcmp } from "../utils/str_utils";
+import { addFile, editFile } from "./redux/fileslice";
 import { store } from "./redux/store";
 export class MyFileSystem {
     constructor() {}
@@ -8,7 +10,7 @@ export class MyFileSystem {
     }
 
     children(path: Path): Array<Path> {
-        return this._files().filter((f) => pathIsChild(path, f.path())).map((f) => f.path());
+        return this._files().filter((f) => pathIsChild(path, f.path())).map((f) => f.path()).sort((a, b) => strcmp(a.basename(), b.basename()));
     }
 
     exists(path: Path): boolean {
@@ -19,6 +21,16 @@ export class MyFileSystem {
         let found = this._files().filter((f) => Path.equals(path, f.path()));
         if(found) {
             return found[0];
+        }
+    }
+
+    write(path: Path, contents: string) {
+        let found = this.get(path);
+        if(!found) {
+            let newFile = new MyFile([path.toString(), false, contents]);
+            store.dispatch(addFile(newFile));
+        } else {
+            store.dispatch(editFile([path, contents]))
         }
     }
 }
