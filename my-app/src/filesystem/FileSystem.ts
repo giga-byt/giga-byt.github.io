@@ -16,7 +16,6 @@ export class MyFileSystem {
     }
 
     get(path: Path): MyFile | undefined {
-        console.log(this._files().map((f) => f.path().toString()));
         let found = this._files().filter((f) => Path.equals(path, f.path()));
         if(found) {
             return found[0];

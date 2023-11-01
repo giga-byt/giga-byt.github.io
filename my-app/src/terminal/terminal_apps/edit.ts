@@ -6,8 +6,10 @@ import CC, { TBGColor, TColor } from './ControlCodes'
 import { KC } from "./KeyCodes";
 import { Cursor } from "./CursorUtils";
 
-const NCOMMANDROWS = 3;
-const NCOMMANDCOLS = 1;
+const TOP_ROWS = 1;
+const BOT_ROWS = 3;
+const LEFT_ROWS = 0;
+const RIGHT_ROWS = 1;
 
 enum EditMode {
     EDIT = 0,
@@ -15,8 +17,6 @@ enum EditMode {
 }
 
 const FILE_PREFIX = 'File Name to Write: ';
-
-
 
 export default class Edit implements ITerminalApplication {
     terminal: Terminal;
@@ -49,15 +49,15 @@ export default class Edit implements ITerminalApplication {
     }
 
     _viewportRows() {
-        return this.terminal.rows - NCOMMANDROWS;
+        return this.terminal.rows - TOP_ROWS - BOT_ROWS;
     }
 
     _viewportCols() {
-        return this.terminal.cols - NCOMMANDCOLS;
+        return this.terminal.cols - LEFT_ROWS - RIGHT_ROWS;
     }
 
     _statusRow(): number {
-        return this._viewportRows();
+        return this._viewportRows() + TOP_ROWS;
     }
 
     _cursorUp() {
@@ -165,7 +165,7 @@ export default class Edit implements ITerminalApplication {
 
     _getDisplayCursorPos(): [number, number] {
         if(this.mode == EditMode.EDIT) {
-            return this.cpos;
+            return [this.cpos[0] + LEFT_ROWS, this.cpos[1] + TOP_ROWS];
         } else {
             return [this.save_cursor_pos + FILE_PREFIX.length, this._statusRow()];
         }
@@ -196,6 +196,15 @@ export default class Edit implements ITerminalApplication {
         }
         let cmd = CC.clearScreen();
         cmd += CC.moveToTopLeft();
+
+        // write file header
+        let header = '';
+        let fname = this.fname;
+        header = header.padStart(Math.round(this.terminal.cols / 2 - fname.length / 2));
+        header += fname;
+        header = header.padEnd(this.terminal.cols);
+        cmd += CC.color(header, TColor.BLACK, TBGColor.LIGHT_GRAY, true);
+        cmd += CC.newLine();
         let nrows = this._viewportRows();
         let ncols = this._viewportCols();
         let lines = this.contents.slice(this._vscroll(), this._vscroll() + nrows);
@@ -204,9 +213,7 @@ export default class Edit implements ITerminalApplication {
             cmd += lScrolledLine;
             cmd += CC.newLine();
         });
-        // write commands
-        cmd += CC.moveToTopLeft();
-        cmd += CC.moveDown(this._viewportRows());
+        // // write commands
         let statusMsg = this._getStatusMessage();
         cmd += statusMsg + CC.newLine();
         cmd += CC.color('^O', TColor.BLACK, TBGColor.LIGHT_GRAY, true) + ' Write Out' + CC.newLine();
@@ -216,7 +223,12 @@ export default class Edit implements ITerminalApplication {
         let pos = this._getDisplayCursorPos();
         cmd += CC.moveRight(pos[0]);
         cmd += CC.moveDown(pos[1]);
+        console.log(cmd);
         this.terminal.write(cmd);
+    }
+
+    _saveDocument(): void {
+
     }
 
     onExec(args: Array<string>): string | undefined {
